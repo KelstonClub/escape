@@ -16,7 +16,7 @@ def play_error():
     mixer.Sound("failure.wav").play()
 
 def main():
-    stairway_lights = nw0.discover("stairway_lights")
+    stairway = nw0.discover("stairway")
     passageway = nw0.discover("passageway")
 
     #
@@ -28,7 +28,7 @@ def main():
     #
     # Turn the main lights off
     #
-    if nw0.send_message_to(stairway_lights, ("main", "off")):
+    if nw0.send_message_to(stairway, ("primary", "off")):
         play_success()
     else:
         play_error()
@@ -36,7 +36,7 @@ def main():
     #
     # Turn the secondary lights on
     #
-    if nw0.send_message_to(stairway_lights, ("main", "off")):
+    if nw0.send_message_to(stairway, ("secondary", "on")):
         play_success()
     else:
         play_error()
