@@ -13,6 +13,14 @@ def activate():
     logger.info("About to activate...")
     time.sleep(0.2)
 
+def handle_command(command):
+    if command == "reset":
+        reset()
+    elif command == "activate":
+        activate()
+    else:
+        raise RuntimeError("Unrecognised command: %s" % command)
+
 def main():
     passageway = nw0.advertise("passageway")
     logger.info("Advertising passageway as %s", passageway)
@@ -22,12 +30,14 @@ def main():
         command = nw0.wait_for_message_from(passageway)
         logger.info("Received command %s", command)
 
-        if command == "reset":
-            reset()
-        elif command == "activate":
-            activate()
+        try:
+            handle_command(command)
+        except:
+            logger.exception("Error handling command")
+            nw0.send_reply_to(passageway, False)
         else:
-            raise RuntimeError("Unrecognised command: %s" % command)
+            nw0.send_reply_to(passageway, True)
+
 
 if __name__ == '__main__':
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

@@ -20,7 +20,9 @@ def handle_message(message):
     logger.info("Handle message %s", message)
     (zone, state) = message
 
-    if zone == "primary":
+    if message == "reset":
+        reset()
+    elif zone == "primary":
         handle_primary(state)
     elif zone == "secondary":
         handle_secondary(state)
@@ -36,10 +38,13 @@ def main():
         message = nw0.wait_for_message_from(stairway)
         logger.info("Received command %s", message)
 
-        if message == "reset":
-            reset()
-        else:
+        try:
             handle_message(message)
+        except:
+            logger.exception("Error handling message")
+            nw0.send_reply_to(stairway, False)
+        else:
+            nw0.send_reply_to(stairway, True)
 
 if __name__ == '__main__':
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
