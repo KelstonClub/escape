@@ -30,4 +30,9 @@ def main():
             raise RuntimeError("Unrecognised command: %s" % command)
 
 if __name__ == '__main__':
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+    logger.setLevel(logging.DEBUG)
     main(*sys.argv[1:])
