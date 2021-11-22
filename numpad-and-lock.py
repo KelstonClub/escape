@@ -1,4 +1,6 @@
 import os, sys
+import logging
+logger = logging.getLogger("numpad")
 import time
 
 from pygame import mixer
@@ -6,19 +8,19 @@ mixer.init()
 import networkzero as nw0
 
 def reset():
-    print("About to reset...")
+    logger.info("About to reset...")
     time.sleep(0.2)
 
 def handle_message(message):
-    print("About to handle message", message, "...")
+    logger.info("About to handle message %s ...", message)
     time.sleep(0.2)
 
 def wait_for_numpad():
-    print("About to wait for numpad...")
+    logger.info("About to wait for numpad...")
     time.sleep(0.2)
 
 def unlock():
-    print("About to unlock...")
+    logger.info("About to unlock...")
     time.sleep(0.2)
 
 def play_success():
@@ -29,11 +31,15 @@ def play_error():
 
 def main():
     numpad = nw0.advertise("numpad")
+    logger.info("Looking for stairway...")
     stairway = nw0.discover("stairway")
+    logger.info("Found stairway at %s", stairway)
+    logger.info("Looking for passageway...")
     passageway = nw0.discover("passageway")
+    logger.info("Found passageway at %s", passageway)
 
     while True:
-        print("Checking for message...")
+        logger.info("Checking for message...")
         message = nw0.wait_for_message_from(numpad, wait_for_s=0)
         if message is not None:
             handle_message(message)
@@ -44,6 +50,7 @@ def main():
         wait_for_numpad()
         unlock()
 
+        logger.info("About to turn primary lights off..")
         #
         # Turn the main lights off
         #
@@ -52,6 +59,7 @@ def main():
         else:
             play_error()
 
+        logger.info("About to turn secondary lights on..")
         #
         # Turn the secondary lights on
         #
@@ -60,6 +68,7 @@ def main():
         else:
             play_error()
 
+        logger.info("About to activate passageway..")
         #
         # Send a message to the passageway controller for it to
         # do its thing
@@ -69,6 +78,10 @@ def main():
         else:
             play_error()
 
-
 if __name__ == '__main__':
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
+    logger.setLevel(logging.DEBUG)
     main(*sys.argv[1:])
