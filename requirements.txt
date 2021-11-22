@@ -1,4 +1,7 @@
 bluedot==2.0.0
 dbus-python==1.2.18
+netifaces==0.11.0
+networkzero==1.0b1
 pkg_resources==0.0.0
-
+pygame==2.1.0
+pyzmq==22.3.0
