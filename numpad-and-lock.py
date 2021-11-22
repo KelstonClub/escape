@@ -1,19 +1,25 @@
 import os, sys
+import time
+
 from pygame import mixer
 mixer.init()
 import networkzero as nw0
 
 def reset():
-    raise NotImplementedError
+    print("About to reset...")
+    time.sleep(0.2)
 
-def handle_message():
-    raise NotImplementedError
+def handle_message(message):
+    print("About to handle message", message, "...")
+    time.sleep(0.2)
 
 def wait_for_numpad():
-    raise NotImplementedError
+    print("About to wait for numpad...")
+    time.sleep(0.2)
 
 def unlock():
-    raise NotImplementedError
+    print("About to unlock...")
+    time.sleep(0.2)
 
 def play_success():
     mixer.Sound("success.wav").play()
@@ -27,6 +33,7 @@ def main():
     passageway = nw0.discover("passageway")
 
     while True:
+        print("Checking for message...")
         message = nw0.wait_for_message_from(numpad, wait_for_s=0)
         if message is not None:
             handle_message(message)
