@@ -17,7 +17,12 @@ def handle_message(message):
 
 def wait_for_numpad():
     logger.info("About to wait for numpad...")
-    time.sleep(0.2)
+    while True:
+        combo = input("Enter the combination:")
+        if combo == "1234":
+            return True
+        else:
+            time.sleep(0.2)
 
 def unlock():
     logger.info("About to unlock...")
