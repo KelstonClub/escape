@@ -10,3 +10,5 @@ pygame==2.1.0
 pyttsx3==2.90
 pyzmq==22.3.0
 RPi.GPIO==0.7.1a4
+
+
