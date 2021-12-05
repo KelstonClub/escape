@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/ambience.wav
+/general_soundtrack_knives_out.wav
+/intense_knives_out.wav
+/tension_002.wav
