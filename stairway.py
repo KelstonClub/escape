@@ -3,6 +3,7 @@ NODE = "stairway"
 import os, sys
 import logging
 logger = logging.getLogger("stairway")
+import threading
 import time
 import gpiozero
 
@@ -66,7 +67,7 @@ def main():
     reset()
     stairway = nw0.advertise("stairway")
     logger.info("Advertising stairway as %s", stairway)
-    threading.Thread(target=send_heartbeat, daemon=True).start()
+    ## threading.Thread(target=send_heartbeat, daemon=True).start()
 
     while True:
         logger.info("Waiting for message...")
