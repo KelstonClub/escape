@@ -110,7 +110,7 @@ class keypad_ctrl:
         time.sleep(0.1)
         
         if (time.time() - self.start_time > 5) and len(self.current_code) > 0:
-            self.wrong_password_sound().play()
+            self.wrong_password_sound.play()
             print("Doing a reset")
             self.current_code = ""
             self.last_char = ""
@@ -118,17 +118,23 @@ class keypad_ctrl:
         return False
 
 
-def set_athmosphere_phase1(relays):
+def set_athmosphere_phase1(relays, studio, passageway):
     play_music(music["base"])
     
     relays.switch_normal_light(True)
     relays.switch_black_light(True)
     relays.switch_keypad_lock(True)
 
-def set_athmosphere_phase2(relays):
+    nw0.send_message_to(studio, ("primary", None))
+    nw0.send_message_to(passageway, ("primary", None))
+
+def set_athmosphere_phase2(relays, studio, passageway):
     play_music(music["intense"])
     relays.switch_normal_light(False)
     relays.switch_black_light(False)
+    nw0.send_message_to(studio, ("secondary", None))
+    nw0.send_message_to(passageway, ("secondary", None))
+    
     time.sleep(1)
     relays.switch_keypad_lock(False)
 
@@ -137,8 +143,10 @@ def set_stable(relays):
     relays.switch_black_light(True)
     relays.switch_keypad_lock(True)    
 
-def reset():
-    logger.info("About to reset...")
+def reset(relays, studio , passageway):
+    set_stable(relays)
+    nw0.send_message_to(studio, ("reset", None))
+    nw0.send_message_to(passageway, ("reset", None))
     time.sleep(0.2)
 
 def handle_message(message):
@@ -171,32 +179,29 @@ def main():
     # initialize services
     numpad = nw0.advertise("numpad")
 
-    logger.info("Looking for stairway...")
-    #stairway = nw0.discover("stairway")
-    #logger.info("Found stairway at %s", stairway)
+    logger.info("Looking for studio...")
+    studio = nw0.discover("studio")
+    logger.info("Found studio at %s", studio)
 
     logger.info("Looking for passageway...")
-    #passageway = nw0.discover("passageway")
-    #logger.info("Found passageway at %s", passageway)
+    passageway = nw0.discover("passageway")
+    logger.info("Found passageway at %s", passageway)
 
     keypad = keypad_ctrl(keypad_solution)
     relays = relay_ctrl()
-    set_athmosphere_phase1(relays)
-
-    #init_relay_system()
-    #set_athmosphere_phase1()
+    set_athmosphere_phase1(relays, studio, passageway)
 
     try:
         while True:
             if keypad.refresh_keypad():
                 break
 
-        set_athmosphere_phase2(relays)
+        set_athmosphere_phase2(relays, studio, passageway)
         while True:
             time.sleep(10)
 
     except KeyboardInterrupt:
-        set_stable(relays)
+        reset(relays, studio, passageway)
         print("\nApplication stopped!")
         exit(0)
 
@@ -216,7 +221,7 @@ def main():
         #
         # Turn the main lights off
         #
-        if nw0.send_message_to(stairway, ("primary", "off")):
+        if nw0.send_message_to(studio, ("primary", "off")):
             play_success()
         else:
             play_error()
@@ -225,7 +230,7 @@ def main():
         #
         # Turn the secondary lights on
         #
-        if nw0.send_message_to(stairway, ("secondary", "on")):
+        if nw0.send_message_to(studio, ("secondary", "on")):
             play_success()
         else:
             play_error()
