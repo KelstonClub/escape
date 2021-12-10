@@ -26,6 +26,7 @@ class relay_ctrl:
         if pins:
             for pin in pins:
                 self.relays.append(gpiozero.OutputDevice(pin, active_high=True, initial_value=True))
+
         else:
             # initilize relays
             # False: open
