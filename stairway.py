@@ -1,3 +1,5 @@
+NODE = "stairway"
+
 import os, sys
 import logging
 logger = logging.getLogger("stairway")
@@ -5,6 +7,9 @@ import time
 import gpiozero
 
 import networkzero as nw0
+
+HEARTBEAT_ADDRESS = nw0.address()
+HEARTBEAT_INTERVAL_S = 2.0
 
 relay1 = gpiozero.OutputDevice(21, active_high=True, initial_value=False)
 relay2 = gpiozero.OutputDevice(20, active_high=True, initial_value=False)
@@ -47,10 +52,21 @@ def handle_message(message):
     else:
         raise RuntimeError("Unrecognised message: %s" % message)
 
+def send_heartbeat():
+    while True:
+        #
+        # Advertise the heartbeat frequently to allow for beacon shutdowns
+        #
+        heartbeat = nw0.advertise("heartbeat/%s" % NODE, HEARTBEAT_ADDRESS)
+        print("Sending heartbeat", NODE, "to", heartbeat)
+        nw0.send_news_to(heartbeat, NODE)
+        time.sleep(HEARTBEAT_INTERVAL_S)
+
 def main():
     reset()
     stairway = nw0.advertise("stairway")
     logger.info("Advertising stairway as %s", stairway)
+    threading.Thread(target=send_heartbeat, daemon=True).start()
 
     while True:
         logger.info("Waiting for message...")
