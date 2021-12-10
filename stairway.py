@@ -1,19 +1,28 @@
 NODE = "stairway"
 
+class _DummyRelay:
+    def on(self): pass
+    def off(self): pass
+
 import os, sys
 import logging
-logger = logging.getLogger("stairway")
+logger = logging.getLogger(NODE)
+import threading
 import time
-import gpiozero
+try:
+    import gpiozero
+except ImportError:
+    logger.warn("Can't import gpiozero; probably not on RPi")
+    relay1 = relay2 = relay3 = _DummyRelay()
+else:
+    relay1 = gpiozero.OutputDevice(21, active_high=True, initial_value=False)
+    relay2 = gpiozero.OutputDevice(20, active_high=True, initial_value=False)
+    relay3 = gpiozero.OutputDevice(26, active_high=True, initial_value=False)
 
 import networkzero as nw0
 
 HEARTBEAT_ADDRESS = nw0.address()
 HEARTBEAT_INTERVAL_S = 2.0
-
-relay1 = gpiozero.OutputDevice(21, active_high=True, initial_value=False)
-relay2 = gpiozero.OutputDevice(20, active_high=True, initial_value=False)
-relay3 = gpiozero.OutputDevice(26, active_high=True, initial_value=False)
 
 def reset():
     handle_primary("on")
@@ -66,7 +75,7 @@ def main():
     reset()
     stairway = nw0.advertise("stairway")
     logger.info("Advertising stairway as %s", stairway)
-    threading.Thread(target=send_heartbeat, daemon=True).start()
+    #~ threading.Thread(target=send_heartbeat, daemon=True).start()
 
     while True:
         logger.info("Waiting for message...")
