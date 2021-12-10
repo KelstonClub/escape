@@ -7,28 +7,21 @@ class _DummyRelay:
 import os, sys
 import logging
 logger = logging.getLogger(NODE)
-import threading
 import time
-try:
-    import gpiozero
-except ImportError:
-    logger.warn("Can't import gpiozero; probably not on RPi")
-    relay1 = relay2 = relay3 = _DummyRelay()
-else:
-    relay1 = gpiozero.OutputDevice(21, active_high=True, initial_value=False)
-    relay2 = gpiozero.OutputDevice(20, active_high=True, initial_value=False)
-    relay3 = gpiozero.OutputDevice(26, active_high=True, initial_value=False)
+
+from relays import relay_ctrl
 
 import networkzero as nw0
 
 HEARTBEAT_ADDRESS = nw0.address()
 HEARTBEAT_INTERVAL_S = 2.0
 
-def reset():
-    handle_primary("on")
-    handle_secondary("off")
+def reset(relays):
+    relays.switch_relay(0, False)
+    relays.switch_relay(1, False)
+    pass
 
-def handle_primary(target_state):
+def handle_primary(relays, target_state):
     logger.info("About to handle primary %s", target_state)
     if target_state == "on":
         relay1.on()
@@ -38,7 +31,7 @@ def handle_primary(target_state):
         relay2.off()
     time.sleep(0.2)
 
-def handle_secondary(target_state):
+def handle_secondary(relays, target_state):
     logger.info("About to handle secondary %s", target_state)
     if target_state == "on":
         relay3.on()
@@ -46,18 +39,20 @@ def handle_secondary(target_state):
         relay3.off()
     time.sleep(0.2)
 
-def handle_message(message):
+def handle_message(relays, message):
     logger.info("Handle message %s", message)
 
     if message == "reset":
-        reset()
+        reset(relays)
         return
 
     (zone, state) = message
     if zone == "primary":
-        handle_primary(state)
+        relays.switch_relay(0, False)
+        relays.switch_relay(1, False)
     elif zone == "secondary":
-        handle_secondary(state)
+        relays.switch_relay(0, True)
+        relays.switch_relay(1, True)
     else:
         raise RuntimeError("Unrecognised message: %s" % message)
 
@@ -72,7 +67,19 @@ def send_heartbeat():
         time.sleep(HEARTBEAT_INTERVAL_S)
 
 def main():
-    reset()
+    # 2,22,25
+    relays = relay_ctrl([4, 22])
+
+    # 1: normal light
+    #22 : black light
+
+    #relays.switch_relay(0, False)
+    #relays.switch_relay(1, False)
+    #relays.switch_relay(1, True)
+    #relays.switch_relay(3, True)
+    #relays.switch_relay(4, True)
+
+    #reset(relays)
     studio = nw0.advertise("studio")
     logger.info("Advertising studio as %s", studio)
     #~ threading.Thread(target=send_heartbeat, daemon=True).start()
@@ -83,7 +90,8 @@ def main():
         logger.info("Received command %s", message)
 
         try:
-            handle_message(message)
+            print(message)
+            handle_message(relays, message)
         except:
             logger.exception("Error handling message")
             nw0.send_reply_to(studio, False)
