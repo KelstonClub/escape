@@ -7,23 +7,27 @@ class _DummyRelay:
 import os, sys
 import logging
 logger = logging.getLogger(NODE)
-import threading
 import time
-try:
-    import gpiozero
-except ImportError:
-    logger.warn("Can't import gpiozero; probably not on RPi")
-    relay1 = relay2 = relay3 = _DummyRelay()
-else:
-    relay1 = gpiozero.OutputDevice(21, active_high=True, initial_value=False)
-    relay2 = gpiozero.OutputDevice(20, active_high=True, initial_value=False)
-    relay3 = gpiozero.OutputDevice(26, active_high=True, initial_value=False)
+
+from relays import relay_ctrl
 
 import networkzero as nw0
 
 HEARTBEAT_ADDRESS = nw0.address()
 HEARTBEAT_INTERVAL_S = 2.0
 
+def set_athmosphere_phase1(relays):
+    #play_music(music["base"])
+    
+    relays.switch_normal_light(True)
+    relays.switch_black_light(True)
+    relays.switch_keypad_lock(True)
+
+def set_athmosphere_phase2(relays):
+    #play_music(music["intense"])
+    relays.switch_normal_light(False)
+    relays.switch_black_light(False)
+    relays.switch_keypad_lock(False)
 
 def reset():
     logger.info("About to reset...")
@@ -33,11 +37,13 @@ def activate():
     logger.info("About to activate...")
     time.sleep(0.2)
 
-def handle_command(command):
+def handle_command(relays, command):
     if command == "reset":
-        reset()
-    elif command == "activate":
-        activate()
+        set_athmosphere_phase1(relays)
+    elif command == "primary":
+        set_athmosphere_phase1(relays)
+    elif command == "secondary":
+        set_athmosphere_phase2(relays)
     else:
         raise RuntimeError("Unrecognised command: %s" % command)
 
@@ -52,10 +58,12 @@ def send_heartbeat():
         time.sleep(HEARTBEAT_INTERVAL_S)
 
 def main():
-    reset()
+    #reset()
     passageway = nw0.advertise(NODE)
     logger.info("Advertising passageway as %s", passageway)
     #~ threading.Thread(target=send_heartbeat, daemon=True).start()
+    
+    relays = relay_ctrl()
 
     while True:
         logger.info("Waiting for command...")
@@ -63,7 +71,7 @@ def main():
         logger.info("Received command %s", command)
 
         try:
-            handle_command(command)
+            handle_command(relays, command)
         except:
             logger.exception("Error handling command")
             nw0.send_reply_to(passageway, False)
