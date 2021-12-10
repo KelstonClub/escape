@@ -1,43 +1,41 @@
-NODE = "passageway"
-
-class _DummyRelay:
-    def on(self): pass
-    def off(self): pass
+NODE = "countdown"
 
 import os, sys
 import logging
 logger = logging.getLogger(NODE)
 import threading
 import time
-try:
-    import gpiozero
-except ImportError:
-    logger.warn("Can't import gpiozero; probably not on RPi")
-    relay1 = relay2 = relay3 = _DummyRelay()
-else:
-    relay1 = gpiozero.OutputDevice(21, active_high=True, initial_value=False)
-    relay2 = gpiozero.OutputDevice(20, active_high=True, initial_value=False)
-    relay3 = gpiozero.OutputDevice(26, active_high=True, initial_value=False)
+
+os.add_dll_directory(r"C:\Program Files\VideoLAN\VLC")
+import vlc
 
 import networkzero as nw0
 
 HEARTBEAT_ADDRESS = nw0.address()
 HEARTBEAT_INTERVAL_S = 2.0
 
+player = vlc.MediaPlayer("background-sounds/countdown.mp4")
+player.set_fullscreen(True)
 
 def reset():
     logger.info("About to reset...")
-    time.sleep(0.2)
+    player.stop()
 
-def activate():
-    logger.info("About to activate...")
-    time.sleep(0.2)
+def play():
+    logger.info("About to play...")
+    player.play()
+
+def speed_up():
+    logger.info("About to speed up")
+    player.set_rate(1.5)
 
 def handle_command(command):
     if command == "reset":
         reset()
-    elif command == "activate":
-        activate()
+    elif command == "play":
+        play()
+    elif command == "speed_up":
+        speed_up()
     else:
         raise RuntimeError("Unrecognised command: %s" % command)
 
@@ -53,22 +51,22 @@ def send_heartbeat():
 
 def main():
     reset()
-    passageway = nw0.advertise(NODE)
-    logger.info("Advertising passageway as %s", passageway)
+    countdown = nw0.advertise(NODE)
+    logger.info("Advertising countdown as %s", countdown)
     #~ threading.Thread(target=send_heartbeat, daemon=True).start()
 
     while True:
         logger.info("Waiting for command...")
-        command = nw0.wait_for_message_from(passageway)
+        command = nw0.wait_for_message_from(countdown)
         logger.info("Received command %s", command)
 
         try:
             handle_command(command)
         except:
             logger.exception("Error handling command")
-            nw0.send_reply_to(passageway, False)
+            nw0.send_reply_to(countdown, False)
         else:
-            nw0.send_reply_to(passageway, True)
+            nw0.send_reply_to(countdown, True)
 
 
 if __name__ == '__main__':
