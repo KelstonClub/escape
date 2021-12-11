@@ -36,10 +36,12 @@ HEARTBEAT_INTERVAL_S = 2.0
 player = vlc.MediaPlayer(os.path.join(HERE, "background-sounds/countdown.mp4"))
 logger.info("VLC Player %r", player)
 player.set_fullscreen(True)
+player.audio_set_volume(100)
 
 def reset():
     logger.info("About to reset...")
-    player.stop()
+    player.pause()
+    player.set_position(0)
     logger.info("Reset complete")
 
 def play():
@@ -50,13 +52,21 @@ def speed_up():
     logger.info("About to speed up")
     player.set_rate(1.5)
 
+def pause():
+    logger.info("About to pause")
+    player.pause()
+
 def handle_command(command):
-    if command in ("reset", "stop"):
+    if command == "reset":
         reset()
+    elif command == "stop":
+        stop()
     elif command == "start":
         play()
     elif command == "speed_up":
         speed_up()
+    elif command == "pause":
+        pause()
     else:
         raise RuntimeError("Unrecognised command: %s" % command)
 
