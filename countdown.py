@@ -43,11 +43,11 @@ def stop():
 
 def reset():
     logger.info("About to reset...")
-    player.stop()
+    player.set_position(0)
     player.play()
-    #~ time.sleep(0.5)
+    time.sleep(0.5)
     player.set_rate(1.0)
-    #~ player.pause()
+    player.pause()
     logger.info("Reset complete")
 
 def play():
@@ -58,21 +58,32 @@ def speed_up():
     logger.info("About to speed up")
     player.set_rate(1.5)
 
+def set_speed(rate=1.0):
+    logger.info("About to set speed to %s", rate)
+    player.set_rate(float(rate))
+
 def pause():
     logger.info("About to pause")
     player.pause()
 
 def handle_command(command):
+    if isinstance(command, (tuple, list)):
+        command, args = command[0], command[1:]
+    else:
+        command, args = command, []
+    logger.info("command, args = %s, %s", command, args)
     if command == "reset":
-        reset()
+        reset(*args)
     elif command == "stop":
-        stop()
+        stop(*args)
     elif command == "start":
-        play()
+        play(*args)
     elif command == "speed_up":
-        speed_up()
+        speed_up(*args)
+    elif command == "set_speed":
+        set_speed(*args)
     elif command == "pause":
-        pause()
+        pause(*args)
     else:
         raise RuntimeError("Unrecognised command: %s" % command)
 
