@@ -38,10 +38,16 @@ logger.info("VLC Player %r", player)
 player.set_fullscreen(True)
 player.audio_set_volume(100)
 
+def stop():
+    player.stop()
+
 def reset():
     logger.info("About to reset...")
-    player.pause()
-    player.set_position(0)
+    player.stop()
+    player.play()
+    #~ time.sleep(0.5)
+    player.set_rate(1.0)
+    #~ player.pause()
     logger.info("Reset complete")
 
 def play():
